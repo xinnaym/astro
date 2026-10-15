@@ -1,0 +1,1769 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASTRO — Одежда для движения вперёд</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --lime: #c8f000;
+    --coral: #f05c40;
+    --black: #111111;
+    --white: #ffffff;
+    --bg: #f0ede8;
+    --gray: #888;
+    --border: #ddd;
+  }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: var(--white); color: var(--black); overflow-x: hidden; }
+  a { text-decoration: none; color: inherit; cursor: pointer; }
+  button { cursor: pointer; border: none; background: none; font-family: inherit; }
+  input { font-family: inherit; }
+
+  /* PAGE SYSTEM */
+  .page { display: none; min-height: 100vh; flex-direction: column; }
+  .page.active { display: flex; }
+
+  /* NAVBAR */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-logo {
+    font-size: 20px; font-weight: 900; letter-spacing: -0.5px;
+    display: flex; align-items: center; gap: 2px;
+  }
+  .nav-logo span { color: var(--black); }
+  .logo-star { font-size: 14px; color: var(--black); }
+  .nav-links-desktop { display: none; gap: 32px; align-items: center; }
+  .nav-links-desktop a { font-size: 15px; font-weight: 500; color: var(--black); transition: opacity .2s; }
+  .nav-links-desktop a:hover { opacity: 0.6; }
+  .nav-right { display: flex; align-items: center; gap: 16px; }
+  .nav-cart { font-size: 15px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+  .nav-cart svg { width: 20px; height: 20px; }
+  .nav-cart-count { background: var(--black); color: var(--white); border-radius: 999px; font-size: 11px; padding: 1px 6px; font-weight: 700; }
+  .nav-btn { font-size: 15px; font-weight: 500; }
+  .nav-menu-btn { width: 36px; height: 36px; display: flex; flex-direction: column; justify-content: center; gap: 5px; padding: 4px; }
+  .nav-menu-btn span { display: block; height: 2px; background: var(--black); border-radius: 2px; }
+
+  @media (min-width: 768px) {
+    nav { padding: 0 40px; height: 64px; }
+    .nav-links-desktop { display: flex; }
+    .nav-menu-btn { display: none; }
+    .nav-cart svg { display: none; }
+    .nav-cart-count-mobile { display: none; }
+  }
+
+  /* MOBILE MENU */
+  .mobile-menu {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--white); z-index: 200;
+    display: flex; flex-direction: column;
+    padding: 24px;
+    transform: translateX(100%); transition: transform .3s ease;
+  }
+  .mobile-menu.open { transform: translateX(0); }
+  .mobile-menu-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+  .mobile-menu-close { font-size: 28px; line-height: 1; font-weight: 300; }
+  .mobile-menu a { display: block; font-size: 28px; font-weight: 700; margin-bottom: 20px; }
+
+  /* FOOTER */
+  footer {
+    background: var(--black); color: var(--white);
+    padding: 40px 24px 24px;
+    margin-top: auto;
+  }
+  .footer-logo { font-size: 22px; font-weight: 900; margin-bottom: 32px; }
+  .footer-grid { display: grid; grid-template-columns: 1fr; gap: 24px; margin-bottom: 32px; }
+  .footer-col-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; color: #aaa; }
+  .footer-col a { display: block; font-size: 14px; color: var(--white); opacity: 0.8; margin-bottom: 4px; }
+  .footer-col a:hover { opacity: 1; }
+  .footer-mobile-links { font-size: 14px; opacity: 0.7; margin-bottom: 8px; line-height: 1.8; }
+  .footer-copyright { font-size: 12px; opacity: 0.4; border-top: 1px solid #333; padding-top: 20px; margin-top: 12px; }
+
+  @media (min-width: 768px) {
+    footer { padding: 60px 40px 32px; }
+    .footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr; }
+    .footer-mobile-links { display: none; }
+    .footer-col-links { display: block !important; }
+  }
+
+  /* ===== HOME PAGE ===== */
+  .hero {
+    background: var(--lime); padding: 24px 24px 32px;
+    flex: 0 0 auto;
+  }
+  .hero-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 16px; opacity: 0.7; }
+  .hero-inner { display: flex; flex-direction: column; gap: 20px; }
+  .hero-title { font-size: clamp(40px, 10vw, 80px); font-weight: 900; line-height: 0.95; letter-spacing: -2px; text-transform: uppercase; }
+  .hero-desc { font-size: 15px; line-height: 1.5; max-width: 360px; }
+  .hero-img { border-radius: 16px; overflow: hidden; width: 100%; aspect-ratio: 4/3; }
+  .hero-img img { width: 100%; height: 100%; object-fit: cover; }
+  .hero-btns { display: flex; flex-direction: column; gap: 12px; }
+  .btn-primary {
+    background: var(--black); color: var(--white);
+    border-radius: 999px; padding: 16px 32px;
+    font-size: 16px; font-weight: 600; text-align: center;
+    transition: opacity .2s;
+  }
+  .btn-primary:hover { opacity: 0.8; }
+  .btn-secondary {
+    background: var(--white); color: var(--black);
+    border-radius: 999px; padding: 16px 32px;
+    font-size: 16px; font-weight: 600; text-align: center;
+    border: 2px solid var(--black);
+    transition: all .2s;
+  }
+  .btn-secondary:hover { background: var(--black); color: var(--white); }
+
+  @media (min-width: 768px) {
+    .hero { padding: 40px 40px 60px; }
+    .hero-inner { flex-direction: row; align-items: flex-start; gap: 40px; }
+    .hero-left { flex: 1; }
+    .hero-img { flex: 1; aspect-ratio: 1; max-width: 480px; }
+    .hero-btns { flex-direction: row; }
+    .btn-primary, .btn-secondary { padding: 16px 32px; }
+  }
+
+  /* CATEGORIES */
+  .section { padding: 40px 24px; }
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .section-title { font-size: 28px; font-weight: 700; }
+  .section-link { font-size: 14px; font-weight: 500; opacity: 0.6; white-space: nowrap; }
+  .section-link:hover { opacity: 1; }
+
+  .categories-scroll { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x mandatory; -ms-overflow-style: none; scrollbar-width: none; }
+  .categories-scroll::-webkit-scrollbar { display: none; }
+  .cat-card {
+    flex: 0 0 calc(50% - 6px); scroll-snap-align: start;
+    position: relative; border-radius: 12px; overflow: hidden;
+    aspect-ratio: 3/4; background: #ddd; cursor: pointer;
+  }
+  .cat-card img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
+  .cat-card:hover img { transform: scale(1.04); }
+  .cat-label {
+    position: absolute; bottom: 12px; left: 12px;
+    background: var(--black); color: var(--white);
+    font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
+    padding: 6px 12px; border-radius: 6px;
+  }
+
+  @media (min-width: 768px) {
+    .section { padding: 60px 40px; }
+    .section-title { font-size: 36px; }
+    .categories-scroll { overflow: visible; display: grid; grid-template-columns: repeat(4, 1fr); }
+    .cat-card { flex: unset; }
+  }
+
+  /* PRODUCTS GRID */
+  .products-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .product-card { cursor: pointer; }
+  .product-img {
+    position: relative; border-radius: 12px; overflow: hidden;
+    background: #e8e5e0; aspect-ratio: 3/4; margin-bottom: 10px;
+  }
+  .product-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
+  .product-card:hover .product-img img { transform: scale(1.04); }
+  .product-wish {
+    position: absolute; top: 10px; right: 10px;
+    width: 32px; height: 32px; background: var(--white); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    font-size: 16px; transition: transform .2s;
+  }
+  .product-wish:hover { transform: scale(1.15); }
+  .product-wish.active { color: #e53; }
+  .product-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .product-sub { font-size: 12px; color: var(--gray); margin-bottom: 4px; }
+  .product-price { font-size: 15px; font-weight: 700; }
+
+  @media (min-width: 768px) {
+    .products-grid { grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .product-name { font-size: 16px; }
+    .product-price { font-size: 17px; }
+  }
+
+  /* HOME POPULAR — horizontal on mobile, price inline on desktop */
+  .popular-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  @media (min-width: 768px) {
+    .popular-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  /* BANNER */
+  .banner {
+    background: var(--coral); padding: 48px 24px;
+    display: flex; flex-direction: column; gap: 20px;
+  }
+  .banner-title { font-size: clamp(28px, 6vw, 52px); font-weight: 900; line-height: 1; text-transform: uppercase; color: var(--black); }
+  .banner-desc { font-size: 15px; line-height: 1.6; max-width: 400px; }
+  @media (min-width: 768px) {
+    .banner { flex-direction: row; align-items: center; padding: 60px 40px; gap: 60px; }
+    .banner-title { flex: 1; }
+    .banner-desc { flex: 1; }
+  }
+
+  /* ===== CATALOG PAGE ===== */
+  .breadcrumb { font-size: 13px; color: var(--gray); padding: 16px 24px; }
+  .breadcrumb a { color: var(--gray); }
+  .breadcrumb a:hover { color: var(--black); }
+  @media (min-width: 768px) { .breadcrumb { padding: 20px 40px; } }
+
+  .catalog-hero { padding: 0 24px 24px; }
+  .catalog-title { font-size: clamp(36px, 8vw, 72px); font-weight: 900; letter-spacing: -2px; text-transform: uppercase; margin-bottom: 20px; }
+
+  .filter-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+  .filter-tabs::-webkit-scrollbar { display: none; }
+  .filter-tab {
+    flex: 0 0 auto; padding: 8px 18px; border-radius: 999px;
+    font-size: 14px; font-weight: 500; border: 1.5px solid var(--border);
+    background: var(--white); color: var(--black); transition: all .2s; cursor: pointer;
+  }
+  .filter-tab.active { background: var(--black); color: var(--white); border-color: var(--black); }
+  .filter-tab:hover:not(.active) { border-color: var(--black); }
+
+  @media (min-width: 768px) { .catalog-hero, .catalog-main { padding: 0 40px; } }
+
+  .catalog-layout { display: flex; gap: 40px; padding: 0 24px 40px; }
+  .catalog-sidebar {
+    display: none; flex-direction: column; gap: 24px;
+    width: 180px; flex-shrink: 0;
+  }
+  .catalog-sidebar.show { display: flex; }
+  .sidebar-section-title { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+  .sidebar-options { display: flex; flex-wrap: wrap; gap: 8px; }
+  .sidebar-option {
+    font-size: 13px; cursor: pointer; padding: 2px 0; color: var(--black);
+    opacity: 0.6; transition: opacity .2s;
+  }
+  .sidebar-option:hover, .sidebar-option.active { opacity: 1; font-weight: 600; }
+  .sidebar-divider { border: none; border-top: 1px solid var(--border); }
+  .catalog-products { flex: 1; }
+  .catalog-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .catalog-count { font-size: 13px; color: var(--gray); }
+  .catalog-sort { font-size: 13px; font-weight: 500; cursor: pointer; }
+  .catalog-filter-btn {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 14px; font-weight: 500; padding: 8px 14px;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    background: var(--white); cursor: pointer;
+  }
+
+  @media (min-width: 768px) {
+    .catalog-layout { padding: 0 40px 60px; }
+    .catalog-sidebar { display: flex; }
+    .catalog-filter-btn { display: none; }
+  }
+
+  /* ===== PRODUCT PAGE ===== */
+  .product-page-inner { padding: 16px 24px 40px; }
+  .product-gallery-mobile img { width: 100%; border-radius: 12px; margin-bottom: 16px; }
+  .product-thumbs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; scrollbar-width: none; }
+  .product-thumbs::-webkit-scrollbar { display: none; }
+  .product-thumb {
+    flex: 0 0 72px; height: 72px; border-radius: 8px; overflow: hidden;
+    border: 2px solid transparent; cursor: pointer;
+  }
+  .product-thumb.active { border-color: var(--black); }
+  .product-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .product-badge { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; color: var(--gray); }
+  .product-page-title { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+  .product-page-price { font-size: 24px; font-weight: 700; margin-bottom: 12px; }
+  .product-page-desc { font-size: 14px; line-height: 1.6; color: #555; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+  .product-option-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+  .color-options { display: flex; gap: 8px; margin-bottom: 20px; }
+  .color-opt {
+    width: 30px; height: 30px; border-radius: 50%; cursor: pointer;
+    border: 2px solid transparent; transition: all .2s;
+  }
+  .color-opt.active { border-color: var(--black); outline: 2px solid var(--white); outline-offset: 1px; box-shadow: 0 0 0 3px var(--black); }
+  .size-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .size-table-link { font-size: 12px; text-decoration: underline; color: var(--gray); cursor: pointer; }
+  .size-options { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .size-opt {
+    padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600;
+    border: 1.5px solid var(--border); background: var(--white); cursor: pointer;
+    transition: all .2s;
+  }
+  .size-opt:hover { border-color: var(--black); }
+  .size-opt.active { background: var(--black); color: var(--white); border-color: var(--black); }
+  .add-to-cart {
+    width: 100%; padding: 18px; border-radius: 999px;
+    background: var(--black); color: var(--white);
+    font-size: 17px; font-weight: 700; margin-bottom: 24px;
+    transition: opacity .2s;
+  }
+  .add-to-cart:hover { opacity: 0.8; }
+  .product-details { font-size: 14px; line-height: 2; border-top: 1px solid var(--border); padding-top: 20px; margin-bottom: 40px; }
+
+  /* Desktop product layout */
+  .product-desktop-layout { display: none; }
+  @media (min-width: 768px) {
+    .product-page-inner { padding: 24px 40px 60px; }
+    .product-gallery-mobile, .product-thumbs { display: none; }
+    .product-desktop-layout { display: grid; grid-template-columns: 3fr 2fr; gap: 40px; }
+    .product-desktop-gallery { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .product-desktop-gallery img { width: 100%; border-radius: 12px; aspect-ratio: 3/4; object-fit: cover; }
+    .product-page-title { font-size: 40px; }
+    .product-page-price { font-size: 28px; }
+    .product-wish-btn { float: right; font-size: 24px; cursor: pointer; margin-top: 4px; }
+  }
+
+  /* REVIEWS */
+  .reviews-section { padding: 40px 24px; background: var(--bg); }
+  .reviews-header { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+  .reviews-title { font-size: 24px; font-weight: 700; }
+  .reviews-rating { font-size: 18px; font-weight: 700; }
+  .reviews-grid { display: flex; flex-direction: column; gap: 12px; }
+  .review-card { background: var(--white); border-radius: 12px; padding: 16px; }
+  .review-stars { font-size: 14px; margin-bottom: 6px; }
+  .review-text { font-size: 14px; line-height: 1.5; margin-bottom: 8px; font-weight: 500; }
+  .review-author { font-size: 12px; color: var(--gray); }
+  @media (min-width: 768px) {
+    .reviews-section { padding: 60px 40px; }
+    .reviews-header { flex-direction: row; justify-content: space-between; align-items: center; }
+    .reviews-title { font-size: 36px; }
+    .reviews-rating { font-size: 24px; }
+    .reviews-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
+  }
+
+  /* ===== LOGIN PAGE ===== */
+  .login-page-inner { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 24px; background: var(--bg); }
+  .login-hero-img { width: 100%; max-width: 400px; border-radius: 16px; overflow: hidden; margin-bottom: 24px; aspect-ratio: 4/3; }
+  .login-hero-img img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+  .login-card {
+    background: var(--white); border-radius: 16px; padding: 28px 24px;
+    width: 100%; max-width: 480px;
+  }
+  .login-card-title { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .login-card-sub { font-size: 14px; color: var(--gray); margin-bottom: 24px; }
+  .form-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; display: block; margin-bottom: 6px; }
+  .form-input {
+    width: 100%; border: 1.5px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; font-size: 15px; margin-bottom: 16px;
+    outline: none; transition: border-color .2s; background: var(--white);
+  }
+  .form-input:focus { border-color: var(--black); }
+  .form-input::placeholder { color: #aaa; }
+  .forgot-link { display: block; text-align: right; font-size: 13px; font-weight: 600; margin-bottom: 20px; }
+  .forgot-link:hover { text-decoration: underline; }
+  .btn-full-black {
+    display: block; width: 100%; padding: 17px; border-radius: 999px;
+    background: var(--black); color: var(--white); font-size: 16px; font-weight: 700;
+    text-align: center; margin-bottom: 12px; transition: opacity .2s; cursor: pointer; border: none;
+  }
+  .btn-full-black:hover { opacity: 0.8; }
+  .btn-full-gray {
+    display: block; width: 100%; padding: 17px; border-radius: 999px;
+    background: #e8e5e0; color: var(--black); font-size: 16px; font-weight: 600;
+    text-align: center; transition: background .2s; cursor: pointer; border: none;
+  }
+  .btn-full-gray:hover { background: #d8d5d0; }
+
+  @media (min-width: 768px) {
+    .login-page-inner { flex-direction: row; justify-content: center; align-items: flex-start; gap: 60px; padding: 60px 40px; max-width: 1100px; margin: 0 auto; width: 100%; }
+    .login-hero-img { flex: 1; max-width: 480px; aspect-ratio: 2/3; margin-bottom: 0; }
+    .login-card { flex: 1; }
+    .login-card-title { font-size: 48px; }
+  }
+
+  /* ===== REGISTER PAGE ===== */
+  .register-page-inner { flex: 1; display: flex; flex-direction: column; padding: 24px; background: var(--bg); }
+  .register-left { margin-bottom: 24px; }
+  .register-badge { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--gray); margin-bottom: 8px; }
+  .register-title { font-size: clamp(32px, 7vw, 56px); font-weight: 900; line-height: 1; margin-bottom: 12px; }
+  .register-desc { font-size: 15px; line-height: 1.6; color: #555; max-width: 360px; }
+  .register-card {
+    background: var(--white); border-radius: 16px; padding: 28px 24px; width: 100%;
+  }
+  .register-card-title { font-size: 22px; font-weight: 700; margin-bottom: 20px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .privacy-note { font-size: 12px; color: var(--gray); margin-bottom: 20px; line-height: 1.5; }
+
+  @media (min-width: 768px) {
+    .register-page-inner { flex-direction: row; align-items: flex-start; gap: 60px; padding: 60px 40px; max-width: 1100px; margin: 0 auto; width: 100%; }
+    .register-left { flex: 0 0 380px; margin-bottom: 0; }
+    .register-card { flex: 1; max-width: 480px; }
+  }
+
+  /* ===== CART PAGE ===== */
+  .cart-item { display: flex; gap: 16px; padding: 24px 0; border-bottom: 1px solid var(--border); }
+  .cart-item-img { width: 90px; height: 110px; border-radius: 8px; overflow: hidden; background: #eee; flex-shrink: 0; }
+  .cart-item-img img { width: 100%; height: 100%; object-fit: cover; }
+  .cart-item-info { flex: 1; }
+  .cart-item-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .cart-item-meta { font-size: 13px; color: var(--gray); margin-bottom: 8px; }
+  .cart-item-remove { font-size: 13px; text-decoration: underline; color: var(--black); opacity: 0.6; cursor: pointer; }
+  .cart-item-remove:hover { opacity: 1; }
+  .cart-item-right { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; }
+  .cart-qty { display: flex; align-items: center; border: 1px solid var(--border); border-radius: 99px; padding: 4px 12px; gap: 12px; font-size: 14px; font-weight: 600; }
+  .cart-qty button { font-size: 18px; font-weight: 300; }
+  .cart-item-price { font-size: 16px; font-weight: 700; }
+
+  .checkout-card { background: var(--white); border-radius: 16px; padding: 24px; margin-top: 24px; }
+  .checkout-section-title { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
+  .radio-group { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+  .radio-item { display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer; }
+  .radio-dot { width: 16px; height: 16px; border: 1.5px solid var(--border); border-radius: 50%; position: relative; }
+  .radio-item.active .radio-dot { border-color: var(--black); }
+  .radio-item.active .radio-dot::after { content: ''; position: absolute; top: 3px; left: 3px; width: 8px; height: 8px; background: var(--black); border-radius: 50%; }
+  
+  .summary-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 10px; }
+  .summary-total { display: flex; justify-content: space-between; font-size: 22px; font-weight: 900; margin: 20px 0; }
+  
+  @media (min-width: 768px) {
+    .cart-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 60px; padding: 0 40px 60px; }
+    .checkout-card { margin-top: 0; position: sticky; top: 100px; }
+    .cart-item-img { width: 140px; height: 180px; }
+  }
+
+  /* ===== CONTACTS PAGE ===== */
+  .contacts-map { width: 100%; height: 300px; background: #333; border-radius: 12px; margin-bottom: 32px; }
+  .contacts-grid { display: grid; grid-template-columns: 1fr; gap: 32px; }
+  .contact-block-title { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+  .contact-text { font-size: 15px; color: var(--gray); line-height: 1.6; }
+  @media (min-width: 768px) {
+    .contacts-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; padding: 0 40px 60px; }
+    .contacts-map { height: 400px; }
+    .contacts-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+  }
+
+  /* ===== ABOUT US PAGE ===== */
+  .about-hero { background: var(--coral); padding: 40px 24px; }
+  .about-points { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 40px; }
+  .point-card { background: var(--white); border-radius: 12px; padding: 24px; }
+  .point-num { font-size: 14px; font-weight: 800; margin-bottom: 16px; }
+  .point-title { font-size: 22px; font-weight: 700; margin-bottom: 12px; }
+  .point-desc { font-size: 14px; color: var(--gray); line-height: 1.5; }
+  .about-design-section { background: var(--lime); padding: 40px 24px; }
+  .about-list { list-style: none; margin-top: 24px; }
+  .about-list li { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+  @media (min-width: 768px) {
+    .about-points { grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .about-design-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+  }
+
+  /* ===== PROFILE PAGE ===== */
+  .profile-tabs { display: flex; gap: 8px; margin-bottom: 24px; overflow-x: auto; scrollbar-width: none; }
+  .profile-tab { padding: 8px 16px; border-radius: 8px; border: 1.5px solid var(--border); font-size: 14px; font-weight: 700; }
+  .profile-tab.active { background: var(--black); color: var(--white); border-color: var(--black); }
+  .profile-card { background: var(--white); border-radius: 16px; padding: 24px; margin-bottom: 24px; }
+  .profile-field { background: #f5f5f5; border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; font-size: 15px; }
+  .order-item { display: flex; justify-content: space-between; padding: 16px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px; align-items: center; }
+  .order-status { font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 4px 8px; border-radius: 4px; }
+  .status-shipping { background: #fff8e1; color: #f57c00; }
+  .status-delivered { background: #e8f5e9; color: #388e3c; }
+  .sub-promo { background: var(--lime); border-radius: 16px; padding: 24px; margin-bottom: 24px; }
+
+  @media (min-width: 768px) {
+    .profile-layout { display: grid; grid-template-columns: 200px 1fr; gap: 60px; padding: 0 40px 60px; }
+    .profile-sidebar { display: flex; flex-direction: column; gap: 16px; }
+    .profile-side-link { font-size: 14px; opacity: 0.6; cursor: pointer; }
+    .profile-side-link.active { opacity: 1; font-weight: 700; }
+    .profile-tabs { display: none; }
+    .profile-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px);
+    background: var(--black); color: var(--white); padding: 14px 24px; border-radius: 12px;
+    font-size: 14px; font-weight: 600; z-index: 9999; transition: transform .3s ease;
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* CART BADGE */
+  .cart-badge {
+    background: var(--lime); color: var(--black);
+    border-radius: 999px; font-size: 11px; padding: 1px 6px; font-weight: 700;
+    margin-left: 4px;
+  }
+
+  /* WISHLIST HEART */
+  .wish-heart { color: #ccc; transition: color .2s; }
+  .wish-heart.loved { color: #e53; }
+
+  /* Scrollbar for filters on mobile */
+  @media (max-width: 767px) {
+    .catalog-layout { flex-direction: column; padding: 0 24px 40px; }
+    .catalog-sidebar { display: none; }
+    .catalog-sidebar.mobile-open { display: flex; }
+  }
+
+  .hide-mobile { display: none; }
+  .show-mobile { display: block; }
+  @media (min-width: 768px) { .hide-mobile { display: block; } .show-mobile { display: none; } }
+
+  /* HERO with lime BG uses full-width sections */
+  .home-page { background: var(--bg); }
+  .section-bg-white { background: var(--white); }
+  .section-bg { background: var(--bg); }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav id="main-nav">
+  <a class="nav-logo" onclick="showPage('home')">
+    <span>ASTRO</span><span class="logo-star">✦</span>
+  </a>
+  <div class="nav-links-desktop">
+    <a onclick="showPage('catalog')">Каталог</a>
+    <a onclick="showPage('about')">О нас</a>
+    <a onclick="showPage('contacts')">Контакты</a>
+  </div>
+  <div class="nav-right">
+    <div class="nav-links-desktop" style="gap:16px">
+      <a onclick="showPage('cart')" style="font-size:14px;opacity:.6">Корзина · <span id="cart-count">0</span></a>
+      <a onclick="handleAuthClick()" style="font-size:15px;font-weight:600" id="auth-link">Вход</a>
+    </div>
+    <!-- Mobile -->
+    <button class="nav-cart show-mobile" onclick="showPage('cart')" style="display:flex;align-items:center;gap:4px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      <span class="cart-badge" id="cart-badge-mobile">0</span>
+    </button>
+    <button class="nav-menu-btn" onclick="toggleMobileMenu()">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobile-menu">
+  <div class="mobile-menu-header">
+    <span class="nav-logo">ASTRO<span class="logo-star">✦</span></span>
+    <button class="mobile-menu-close" onclick="toggleMobileMenu()">✕</button>
+  </div>
+  <a onclick="showPage('catalog');toggleMobileMenu()">Каталог</a>
+  <a onclick="showPage('about');toggleMobileMenu()">О нас</a>
+  <a onclick="showPage('contacts');toggleMobileMenu()">Контакты</a>
+  <a onclick="handleAuthClick();toggleMobileMenu()" id="auth-link-mobile">Вход</a>
+  <a onclick="showPage('cart');toggleMobileMenu()">Корзина</a>
+</div>
+
+<!-- ===== HOME PAGE ===== -->
+<div class="page active" id="page-home">
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-label">Новая Орбита · SS'26</div>
+    <div class="hero-inner">
+      <div class="hero-left">
+        <h1 class="hero-title">Одежда для движения вперёд</h1>
+        <p class="hero-desc" style="margin:20px 0 28px">Astro создаёт выразительный городской гардероб: точный крой, честные материалы и свобода сочетаний.</p>
+        <div class="hero-btns">
+          <a class="btn-primary" onclick="showPage('catalog')">Смотреть новинки</a>
+          <a class="btn-secondary" onclick="showPage('register')">Регистрация / Вход</a>
+        </div>
+      </div>
+      <div class="hero-img">
+        <img src="https://images.pexels.com/photos/9645058/pexels-photo-9645058.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=700" alt="ASTRO SS26 Collection">
+      </div>
+    </div>
+  </section>
+
+  <!-- CATEGORIES -->
+  <section class="section section-bg-white">
+    <div class="section-header">
+      <h2 class="section-title">Категории</h2>
+      <a class="section-link" onclick="showPage('catalog')">Все →</a>
+    </div>
+    <div class="categories-scroll">
+      <div class="cat-card" onclick="filterCatalog('Женщинам')">
+        <img src="https://images.pexels.com/photos/19169496/pexels-photo-19169496.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=600&w=400" alt="Женщинам">
+        <div class="cat-label">ЖЕНЩИНАМ →</div>
+      </div>
+      <div class="cat-card" onclick="filterCatalog('Мужчинам')">
+        <img src="https://images.pexels.com/photos/19128142/pexels-photo-19128142.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=600&w=400" alt="Мужчинам">
+        <div class="cat-label">МУЖЧИНАМ →</div>
+      </div>
+      <div class="cat-card" onclick="filterCatalog('Детям')">
+        <img src="https://images.pexels.com/photos/29271917/pexels-photo-29271917.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=600&w=400" alt="Детям">
+        <div class="cat-label">ДЕТЯМ →</div>
+      </div>
+      <div class="cat-card" onclick="filterCatalog('Аксессуары')">
+        <img src="https://images.pexels.com/photos/19169251/pexels-photo-19169251.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=600&w=400" alt="Аксессуары">
+        <div class="cat-label">АКСЕССУАРЫ →</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- POPULAR -->
+  <section class="section section-bg" id="popular-section">
+    <div class="section-header">
+      <h2 class="section-title">Популярное</h2>
+    </div>
+    <div class="popular-grid" id="popular-grid"></div>
+  </section>
+
+  <!-- BANNER -->
+  <div class="banner">
+    <div class="banner-title">Не следуем трендам.<br>Создаём траекторию.</div>
+    <p class="banner-desc">Лимитированные коллекции, долговечные ткани и продуманные детали. Каждая вещь Astro работает в гардеробе дольше одного сезона.</p>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">ASTRO✦</div>
+    <!-- Mobile footer -->
+    <div class="show-mobile">
+      <div style="margin-bottom:20px">
+        <div class="footer-col-title">ПОКУПАТЕЛЯМ</div>
+        <div class="footer-mobile-links">Доставка и оплата · Возврат · Размеры</div>
+      </div>
+      <div style="margin-bottom:20px">
+        <div class="footer-col-title">ASTRO</div>
+        <div class="footer-mobile-links">О бренде · Контакты · Карьера</div>
+      </div>
+      <div style="margin-bottom:20px">
+        <div class="footer-col-title">СЛЕДИТЕ ЗА НАМИ</div>
+        <div class="footer-mobile-links">VK · Telegram</div>
+      </div>
+    </div>
+    <!-- Desktop footer -->
+    <div class="footer-grid hide-mobile">
+      <div></div>
+      <div class="footer-col">
+        <div class="footer-col-title">ПОКУПАТЕЛЯМ</div>
+        <a onclick="showPage('about')">Доставка и оплата</a>
+        <a onclick="showPage('about')">Возврат</a>
+        <a onclick="showPage('about')">Размеры</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">ASTRO</div>
+        <a onclick="showPage('about')">О бренде</a>
+        <a onclick="showPage('contacts')">Контакты</a>
+        <a onclick="showPage('about')">Карьера</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">СЛЕДИТЕ ЗА НАМИ</div>
+        <a href="#">VK</a>
+        <a href="#">Telegram</a>
+      </div>
+    </div>
+    <div class="footer-copyright">© 2026 ASTRO. Все права защищены.</div>
+  </footer>
+</div>
+
+<!-- ===== CATALOG PAGE ===== -->
+<div class="page" id="page-catalog">
+  <div class="breadcrumb"><a onclick="showPage('home')">Главная</a> / Каталог</div>
+  <div class="catalog-hero" style="padding:0 24px 24px">
+    <h1 class="catalog-title">КАТАЛОГ</h1>
+    <div class="filter-tabs" id="catalog-tabs">
+      <button class="filter-tab active" onclick="setCatalogFilter('Все',this)">Все</button>
+      <button class="filter-tab" onclick="setCatalogFilter('Женщинам',this)">Женщинам</button>
+      <button class="filter-tab" onclick="setCatalogFilter('Мужчинам',this)">Мужчинам</button>
+      <button class="filter-tab" onclick="setCatalogFilter('Детям',this)">Детям</button>
+      <button class="filter-tab" onclick="setCatalogFilter('Аксессуары',this)">Аксессуары</button>
+    </div>
+  </div>
+
+  <div class="catalog-layout">
+    <!-- Sidebar (desktop) -->
+    <div class="catalog-sidebar" id="catalog-sidebar">
+      <div>
+        <div class="sidebar-section-title">Размер</div>
+        <div class="sidebar-options">
+          <span class="sidebar-option">XS</span>
+          <span class="sidebar-option">S</span>
+          <span class="sidebar-option active">M</span>
+          <span class="sidebar-option">L</span>
+          <span class="sidebar-option">XL</span>
+        </div>
+      </div>
+      <hr class="sidebar-divider">
+      <div>
+        <div class="sidebar-section-title">Цвет</div>
+        <div class="sidebar-options">
+          <span class="sidebar-option">Чёрный</span>
+          <span class="sidebar-option">Белый</span>
+          <span class="sidebar-option">Серый</span>
+          <span class="sidebar-option">Коралл</span>
+        </div>
+      </div>
+      <hr class="sidebar-divider">
+      <div>
+        <div class="sidebar-section-title">Стиль</div>
+        <div class="sidebar-options">
+          <span class="sidebar-option">Минимализм</span>
+          <span class="sidebar-option">Street</span>
+          <span class="sidebar-option">Sport</span>
+        </div>
+      </div>
+      <hr class="sidebar-divider">
+      <div>
+        <div class="sidebar-section-title">Цена</div>
+        <div style="font-size:13px;opacity:.7">2 000 ₽ — 30 000 ₽</div>
+      </div>
+    </div>
+
+    <!-- Products -->
+    <div class="catalog-products">
+      <div class="catalog-topbar">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="catalog-filter-btn" onclick="toggleMobileSidebar()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="12" y1="18" x2="20" y2="18"/></svg>
+            Фильтры
+          </button>
+          <span class="catalog-count" id="catalog-count">126 товаров</span>
+        </div>
+        <span class="catalog-sort">Сначала новинки ↓</span>
+      </div>
+      <div class="products-grid" id="catalog-grid"></div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">ASTRO✦</div>
+    <div class="show-mobile">
+      <div style="margin-bottom:20px"><div class="footer-col-title">ПОКУПАТЕЛЯМ</div><div class="footer-mobile-links">Доставка и оплата · Возврат · Размеры</div></div>
+      <div style="margin-bottom:20px"><div class="footer-col-title">ASTRO</div><div class="footer-mobile-links">О бренде · Контакты · Карьера</div></div>
+      <div style="margin-bottom:20px"><div class="footer-col-title">СЛЕДИТЕ ЗА НАМИ</div><div class="footer-mobile-links">VK · Telegram</div></div>
+    </div>
+    <div class="footer-grid hide-mobile">
+      <div></div>
+      <div class="footer-col"><div class="footer-col-title">ПОКУПАТЕЛЯМ</div><a href="#">Доставка и оплата</a><a href="#">Возврат</a><a href="#">Размеры</a></div>
+      <div class="footer-col"><div class="footer-col-title">ASTRO</div><a href="#">О бренде</a><a href="#">Контакты</a><a href="#">Карьера</a></div>
+      <div class="footer-col"><div class="footer-col-title">СЛЕДИТЕ ЗА НАМИ</div><a href="#">VK</a><a href="#">Telegram</a></div>
+    </div>
+    <div class="footer-copyright">© 2026 ASTRO. Все права защищены.</div>
+  </footer>
+</div>
+
+<!-- ===== PRODUCT PAGE ===== -->
+<div class="page" id="page-product">
+  <div class="breadcrumb" id="product-breadcrumb">
+    <a onclick="showPage('catalog')">Каталог</a> / Верхняя одежда / Orbit Shell
+  </div>
+  <div class="product-page-inner">
+    <!-- Mobile gallery -->
+    <div class="product-gallery-mobile">
+      <img id="product-main-img" src="" alt="">
+    </div>
+    <div class="product-thumbs" id="product-thumbs"></div>
+
+    <!-- Desktop gallery -->
+    <div class="product-desktop-layout">
+      <div class="product-desktop-gallery" id="product-desktop-gallery"></div>
+      <div class="product-info-desktop">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div class="product-badge" id="pd-badge">НОВИНКА</div>
+            <h1 class="product-page-title" id="pd-title-d">Куртка Orbit Shell</h1>
+            <div class="product-page-price" id="pd-price-d">18 990 ₽</div>
+            <p class="product-page-desc" id="pd-desc-d"></p>
+          </div>
+          <button class="product-wish-btn" id="pd-wish-d" onclick="toggleWishDesktop()">♡</button>
+        </div>
+        <div id="pd-options-d"></div>
+        <button class="add-to-cart" onclick="addToCart()">Добавить в корзину</button>
+        <div class="product-details" id="pd-details-d"></div>
+      </div>
+    </div>
+
+    <!-- Mobile info -->
+    <div id="product-mobile-info">
+      <div class="product-badge" id="pd-badge-m">НОВИНКА</div>
+      <h1 class="product-page-title" id="pd-title-m"></h1>
+      <div class="product-page-price" id="pd-price-m"></div>
+      <p class="product-page-desc" id="pd-desc-m"></p>
+      <div id="pd-options-m"></div>
+      <button class="add-to-cart" onclick="addToCart()">Добавить в корзину</button>
+      <div class="product-details" id="pd-details-m"></div>
+    </div>
+  </div>
+
+  <!-- REVIEWS -->
+  <div class="reviews-section">
+    <div class="reviews-header">
+      <div class="reviews-title">Отзывы покупателей</div>
+      <div class="reviews-rating">4.8 ★ · 24 отзыва</div>
+    </div>
+    <div class="reviews-grid">
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <div class="review-text">Отличная посадка и очень лёгкая. Размер M подошёл идеально.</div>
+        <div class="review-author">Мария · подтверждённая покупка</div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <div class="review-text">Продуманные карманы, материал выглядит дорого.</div>
+        <div class="review-author">Денис · подтверждённая покупка</div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <div class="review-text">Ношу каждый день — хорошо защищает от ветра.</div>
+        <div class="review-author">Алина · подтверждённая покупка</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">ASTRO✦</div>
+    <div class="show-mobile">
+      <div style="margin-bottom:20px"><div class="footer-col-title">ПОКУПАТЕЛЯМ</div><div class="footer-mobile-links">Доставка и оплата · Возврат · Размеры</div></div>
+      <div style="margin-bottom:20px"><div class="footer-col-title">ASTRO</div><div class="footer-mobile-links">О бренде · Контакты · Карьера</div></div>
+      <div style="margin-bottom:20px"><div class="footer-col-title">СЛЕДИТЕ ЗА НАМИ</div><div class="footer-mobile-links">VK · Telegram</div></div>
+    </div>
+    <div class="footer-grid hide-mobile">
+      <div></div>
+      <div class="footer-col"><div class="footer-col-title">ПОКУПАТЕЛЯМ</div><a href="#">Доставка и оплата</a><a href="#">Возврат</a><a href="#">Размеры</a></div>
+      <div class="footer-col"><div class="footer-col-title">ASTRO</div><a href="#">О бренде</a><a href="#">Контакты</a><a href="#">Карьера</a></div>
+      <div class="footer-col"><div class="footer-col-title">СЛЕДИТЕ ЗА НАМИ</div><a href="#">VK</a><a href="#">Telegram</a></div>
+    </div>
+    <div class="footer-copyright">© 2026 ASTRO. Все права защищены.</div>
+  </footer>
+</div>
+
+<!-- ===== LOGIN PAGE ===== -->
+<div class="page" id="page-login">
+  <div class="login-page-inner">
+    <div class="login-hero-img">
+      <img src="https://images.pexels.com/photos/38388457/pexels-photo-38388457.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=700&w=500" alt="ASTRO Fashion">
+    </div>
+    <div class="login-card">
+      <h2 class="login-card-title">С возвращением</h2>
+      <p class="login-card-sub">Войдите, чтобы продолжить покупки.</p>
+      <label class="form-label">Электронная почта</label>
+      <input class="form-input" type="email" placeholder="name@example.com">
+      <label class="form-label">Пароль</label>
+      <input class="form-input" type="password" placeholder="Введите пароль">
+      <a class="forgot-link" href="#">Забыли пароль?</a>
+      <button class="btn-full-black" onclick="handleLogin()">Войти</button>
+      <button class="btn-full-gray" onclick="showPage('register')">Нет аккаунта? Зарегистрироваться</button>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-logo">ASTRO✦</div>
+    <div class="show-mobile">
+      <div style="margin-bottom:20px"><div class="footer-col-title">ПОКУПАТЕЛЯМ</div><div class="footer-mobile-links">Доставка и оплата · Возврат · Размеры</div></div>
+      <div style="margin-bottom:20px"><div class="footer-col-title">ASTRO</div><div class="footer-mobile-links">О бренде · Контакты · Карьера</div></div>
+      <div style="margin-bottom:20px"><div class="footer-col-title">СЛЕДИТЕ ЗА НАМИ</div><div class="footer-mobile-links">VK · Telegram</div></div>
+    </div>
+    <div class="footer-grid hide-mobile">
+      <div></div>
+      <div class="footer-col"><div class="footer-col-title">ПОКУПАТЕЛЯМ</div><a href="#">Доставка и оплата</a><a href="#">Возврат</a><a href="#">Размеры</a></div>
+      <div class="footer-col"><div class="footer-col-title">ASTRO</div><a href="#">О бренде</a><a href="#">Контакты</a><a href="#">Карьера</a></div>
+      <div class="footer-col"><div class="footer-col-title">СЛЕДИТЕ ЗА НАМИ</div><a href="#">VK</a><a href="#">Telegram</a></div>
+    </div>
+    <div class="footer-copyright">© 2026 ASTRO. Все права защищены.</div>
+  </footer>
+</div>
+
+<!-- ===== REGISTER PAGE ===== -->
+<div class="page" id="page-register">
+  <div class="register-page-inner">
+    <div class="register-left">
+      <div class="register-badge">ASTRO CLUB</div>
+      <h1 class="register-title">Станьте частью ASTRO</h1>
+      <p class="register-desc">Ранний доступ к дропам, персональные рекомендации и история заказов в одном месте.</p>
+    </div>
+    <div class="register-card">
+      <div class="register-card-title">Создать аккаунт</div>
+      <div class="form-row">
+        <div>
+          <label class="form-label">Имя *</label>
+          <input class="form-input" type="text" placeholder="Алексей" style="margin-bottom:0">
+        </div>
+        <div>
+          <label class="form-label">Фамилия *</label>
+          <input class="form-input" type="text" placeholder="Орлов" style="margin-bottom:0">
+        </div>
+      </div>
+      <div style="height:16px"></div>
+      <label class="form-label">Электронная почта *</label>
+      <input class="form-input" type="email" placeholder="name@example.com">
+      <label class="form-label">Пароль *</label>
+      <input class="form-input" type="password" placeholder="Минимум 8 символов">
+      <label class="form-label">Дата рождения</label>
+      <input class="form-input" type="text" placeholder="ДД / ММ / ГГГГ">
+      <label class="form-label">Предпочтения в одежде</label>
+      <input class="form-input" type="text" placeholder="Женская, мужская, унисекс">
+      <p class="privacy-note">Создавая аккаунт, вы соглашаетесь с политикой конфиденциальности.</p>
+      <button class="btn-full-black" onclick="handleRegister()">Зарегистрироваться</button>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-logo">ASTRO✦</div>
+    <div class="show-mobile">
+      <div style="margin-bottom:20px"><div class="footer-col-title">ПОКУПАТЕЛЯМ</div><div class="footer-mobile-links">Доставка и оплата · Возврат · Размеры</div></div>
+      <div style="margin-bottom:20px"><div class="footer-col-title">ASTRO</div><div class="footer-mobile-links">О бренде · Контакты · Карьера</div></div>
+      <div style="margin-bottom:20px"><div class="footer-col-title">СЛЕДИТЕ ЗА НАМИ</div><div class="footer-mobile-links">VK · Telegram</div></div>
+    </div>
+    <div class="footer-grid hide-mobile">
+      <div></div>
+      <div class="footer-col"><div class="footer-col-title">ПОКУПАТЕЛЯМ</div><a href="#">Доставка и оплата</a><a href="#">Возврат</a><a href="#">Размеры</a></div>
+      <div class="footer-col"><div class="footer-col-title">ASTRO</div><a href="#">О бренде</a><a href="#">Контакты</a><a href="#">Карьера</a></div>
+      <div class="footer-col"><div class="footer-col-title">СЛЕДИТЕ ЗА НАМИ</div><a href="#">VK</a><a href="#">Telegram</a></div>
+    </div>
+    <div class="footer-copyright">© 2026 ASTRO. Все права защищены.</div>
+  </footer>
+</div>
+
+<!-- ===== CART PAGE ===== -->
+<div class="page" id="page-cart">
+  <div class="breadcrumb"><a onclick="showPage('home')">Главная</a> / Корзина</div>
+  <div class="catalog-hero" style="padding:0 24px 24px">
+    <h1 class="catalog-title">КОРЗИНА</h1>
+  </div>
+  
+  <div class="cart-layout">
+    <div class="cart-items" id="cart-items-list">
+      <!-- Items generated by JS -->
+    </div>
+    
+    <div class="checkout-card">
+      <h2 class="checkout-section-title">Оформление заказа</h2>
+      
+      <div class="checkout-section">
+        <div class="form-label" style="color:var(--black);margin-bottom:12px">ДОСТАВКА</div>
+        <div class="radio-group" id="delivery-options">
+          <div class="radio-item active" onclick="selectRadio(this, 'delivery')">
+            <div class="radio-dot"></div> Курьером по Москве • 490 ₽
+          </div>
+          <div class="radio-item" onclick="selectRadio(this, 'delivery')">
+            <div class="radio-dot"></div> Пункт выдачи • бесплатно
+          </div>
+          <div class="radio-item" onclick="selectRadio(this, 'delivery')">
+            <div class="radio-dot"></div> Почта России • 590 ₽
+          </div>
+        </div>
+      </div>
+      
+      <div class="checkout-section">
+        <div class="form-label" style="color:var(--black);margin-bottom:12px">ОПЛАТА</div>
+        <div class="radio-group" id="payment-options">
+          <div class="radio-item active" onclick="selectRadio(this, 'payment')">
+            <div class="radio-dot"></div> Банковской картой
+          </div>
+          <div class="radio-item" onclick="selectRadio(this, 'payment')">
+            <div class="radio-dot"></div> СБП
+          </div>
+          <div class="radio-item" onclick="selectRadio(this, 'payment')">
+            <div class="radio-dot"></div> При получении
+          </div>
+        </div>
+      </div>
+      
+      <div style="border-top:1px solid var(--border);padding-top:20px">
+        <div class="summary-row"><span>Товары</span><span id="summary-subtotal">41 970 ₽</span></div>
+        <div class="summary-row"><span>Доставка</span><span id="summary-shipping">490 ₽</span></div>
+        <div class="summary-total"><span>Итого</span><span id="summary-total">42 460 ₽</span></div>
+        <button class="btn-full-black" onclick="handleCheckout()">Перейти к оплате</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-logo">ASTRO✦</div>
+    <div class="footer-grid hide-mobile">
+      <div></div>
+      <div class="footer-col"><div class="footer-col-title">ПОКУПАТЕЛЯМ</div><a href="#">Доставка и оплата</a><a href="#">Возврат</a><a href="#">Размеры</a></div>
+      <div class="footer-col"><div class="footer-col-title">ASTRO</div><a href="#">О бренде</a><a href="#">Контакты</a><a href="#">Карьера</a></div>
+      <div class="footer-col"><div class="footer-col-title">СЛЕДИТЕ ЗА НАМИ</div><a href="#">VK</a><a href="#">Telegram</a></div>
+    </div>
+    <div class="footer-copyright">© 2026 ASTRO. Все права защищены.</div>
+  </footer>
+</div>
+
+<!-- ===== CONTACTS PAGE ===== -->
+<div class="page" id="page-contacts">
+  <div class="breadcrumb"><a onclick="showPage('home')">Главная</a> / Контакты</div>
+  <div class="catalog-hero" style="padding:0 24px 24px">
+    <h1 class="catalog-title">КОНТАКТЫ</h1>
+  </div>
+
+  <div class="contacts-layout">
+    <div class="contacts-left">
+      <div class="contacts-map"></div>
+      <div class="contacts-info-grid">
+        <div class="contact-block">
+          <div class="contact-block-title">Магазин Astro</div>
+          <div class="contact-text">Москва, ул. Московская, 12<br>Ежедневно 10:00–21:00</div>
+        </div>
+        <div class="contact-block">
+          <div class="contact-block-title">Связаться</div>
+          <div class="contact-text">+7 495 120-26-26<br>astro@astro.store</div>
+        </div>
+        <div class="contact-block">
+          <div class="contact-block-title">Социальные сети</div>
+          <div class="contact-text">VK • Telegram</div>
+        </div>
+      </div>
+    </div>
+    <div class="contacts-right">
+      <div class="register-card">
+        <div class="register-card-title">Напишите нам</div>
+        <p class="register-desc" style="margin-bottom:20px;font-size:14px">Отправьте сообщение или вопрос — мы свяжемся с вами по электронной почте.</p>
+        <label class="form-label">Имя</label>
+        <input class="form-input" type="text" placeholder="Ваше имя">
+        <label class="form-label">Электронная почта *</label>
+        <input class="form-input" type="email" placeholder="name@example.com">
+        <label class="form-label">Тема</label>
+        <select class="form-input" style="width:100%;appearance:none;background:url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2212%22%20height%3D%228%22%20viewBox%3D%220%200%2012%208%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M1%201L6%206L11%201%22%20stroke%3D%22%23111111%22%20stroke-width%3D%222%22/%3E%3C/svg%3E') no-repeat right 16px center;padding-right:40px">
+          <option>Выберите тему</option>
+          <option>Заказ</option>
+          <option>Сотрудничество</option>
+          <option>Другое</option>
+        </select>
+        <label class="form-label">Сообщение</label>
+        <textarea class="form-input" style="min-height:120px;resize:none" placeholder="Расскажите, чем мы можем помочь"></textarea>
+        <button class="btn-full-black" onclick="showToast('Сообщение отправлено!')">Отправить сообщение</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-logo">ASTRO✦</div>
+    <div class="footer-grid hide-mobile">
+      <div></div>
+      <div class="footer-col"><div class="footer-col-title">ПОКУПАТЕЛЯМ</div><a href="#">Доставка и оплата</a><a href="#">Возврат</a><a href="#">Размеры</a></div>
+      <div class="footer-col"><div class="footer-col-title">ASTRO</div><a href="#">О бренде</a><a href="#">Контакты</a><a href="#">Карьера</a></div>
+      <div class="footer-col"><div class="footer-col-title">СЛЕДИТЕ ЗА НАМИ</div><a href="#">VK</a><a href="#">Telegram</a></div>
+    </div>
+    <div class="footer-copyright">© 2026 ASTRO. Все права защищены.</div>
+  </footer>
+</div>
+
+<!-- ===== ABOUT US PAGE ===== -->
+<div class="page" id="page-about">
+  <section class="about-hero">
+    <div class="register-badge" style="color:var(--black);opacity:.6">НАША ТРАЕКТОРИЯ • С 2018</div>
+    <div class="about-design-inner">
+      <div class="about-hero-left">
+        <h1 class="hero-title" style="font-size:clamp(36px, 8vw, 72px)">ОДЕЖДА, КОТОРАЯ ДВИЖЕТСЯ С ВАМИ</h1>
+        <p class="hero-desc" style="margin-top:24px">Astro родился в Москве как независимая студия городского гардероба. Мы соединяем точный крой, технологичные материалы и свободу самовыражения.</p>
+      </div>
+      <div class="hero-img hide-mobile">
+        <img src="https://images.pexels.com/photos/5319379/pexels-photo-5319379.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=700" alt="">
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="background:var(--white)">
+    <h2 class="section-title">Что для нас важно</h2>
+    <div class="about-points">
+      <div class="point-card">
+        <div class="point-num">01</div>
+        <div class="point-title">Честные материалы</div>
+        <div class="point-desc">Выбираем долговечные ткани и открыто рассказываем о составе каждой вещи.</div>
+      </div>
+      <div class="point-card">
+        <div class="point-num">02</div>
+        <div class="point-title">Свобода сочетаний</div>
+        <div class="point-desc">Коллекции работают вместе и не диктуют один способ носить одежду.</div>
+      </div>
+      <div class="point-card">
+        <div class="point-num">03</div>
+        <div class="point-title">Меньше, но лучше</div>
+        <div class="point-desc">Лимитированные дропы, продуманные детали и вещи дольше одного сезона.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="about-design-section">
+    <div class="about-design-inner">
+      <div class="hero-img">
+        <img src="https://images.pexels.com/photos/12960395/pexels-photo-12960395.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=700" alt="">
+      </div>
+      <div class="about-design-text">
+        <div class="register-badge" style="color:var(--black);opacity:.8">ДИЗАЙН И ПРОИЗВОДСТВО</div>
+        <h2 class="point-title" style="font-size:36px;margin-bottom:20px">От эскиза до готовой вещи</h2>
+        <p class="point-desc" style="color:var(--black);margin-bottom:20px">Команда дизайнеров под руководством Анны Вороновой начинает с наблюдений за городом и движением людей. Затем мы создаём прототипы, тестируем посадку и выбираем материалы.</p>
+        <ul class="about-list">
+          <li>01 Исследование и эскизы</li>
+          <li>02 Макеты и примерки</li>
+          <li>03 Тестирование в движении</li>
+          <li>04 Малый тираж</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">Остаёмся на связи</h2>
+    <div class="contacts-info-grid" style="margin-top:20px">
+      <div class="contact-text">Москва, ул. Московская, 12<br>+7 495 120-26-26 • astro@astro.store</div>
+      <div class="contact-text">VK • Telegram</div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-logo">ASTRO✦</div>
+    <div class="footer-grid hide-mobile">
+      <div></div>
+      <div class="footer-col"><div class="footer-col-title">ПОКУПАТЕЛЯМ</div><a href="#">Доставка и оплата</a><a href="#">Возврат</a><a href="#">Размеры</a></div>
+      <div class="footer-col"><div class="footer-col-title">ASTRO</div><a href="#">О бренде</a><a href="#">Контакты</a><a href="#">Карьера</a></div>
+      <div class="footer-col"><div class="footer-col-title">СЛЕДИТЕ ЗА НАМИ</div><a href="#">VK</a><a href="#">Telegram</a></div>
+    </div>
+    <div class="footer-copyright">© 2026 ASTRO. Все права защищены.</div>
+  </footer>
+</div>
+
+<!-- ===== PROFILE PAGE ===== -->
+<div class="page" id="page-profile">
+  <div class="breadcrumb"><a onclick="showPage('home')">Главная</a> / Личный кабинет</div>
+  <div class="catalog-hero" style="padding:0 24px 24px">
+    <h1 class="catalog-title">ЛИЧНЫЙ КАБИНЕТ</h1>
+  </div>
+
+  <div class="profile-layout">
+    <div class="profile-sidebar">
+      <div class="profile-side-link active" data-tab="profile" onclick="switchProfileTab('profile', this)">Профиль</div>
+      <div class="profile-side-link" data-tab="orders" onclick="switchProfileTab('orders', this)">История заказов</div>
+      <div class="profile-side-link" data-tab="wishlist" onclick="switchProfileTab('wishlist', this)">Список желаний</div>
+      <div class="profile-side-link" data-tab="subs" onclick="switchProfileTab('subs', this)">Настройки подписки</div>
+      <div class="profile-side-link" onclick="handleLogout()" style="margin-top:20px">Выйти</div>
+    </div>
+
+    <div class="profile-tabs">
+      <button class="profile-tab active" data-tab="profile" onclick="switchProfileTab('profile', this)">Профиль</button>
+      <button class="profile-tab" data-tab="orders" onclick="switchProfileTab('orders', this)">История заказов</button>
+      <button class="profile-tab" data-tab="wishlist" onclick="switchProfileTab('wishlist', this)">Список желаний</button>
+      <button class="profile-tab" onclick="handleLogout()">Выйти</button>
+    </div>
+
+    <div class="profile-content">
+      <!-- Profile section -->
+      <div id="prof-section-profile" class="profile-section">
+        <div class="profile-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+            <h2 class="checkout-section-title" style="margin:0">Профиль</h2>
+            <a class="size-table-link" style="font-weight:700">Редактировать</a>
+          </div>
+          <div class="profile-grid-2">
+            <div>
+              <div class="form-label">ИМЯ И ФАМИЛИЯ</div>
+              <div class="profile-field">Алексей Орлов</div>
+            </div>
+            <div>
+              <div class="form-label">ТЕЛЕФОН</div>
+              <div class="profile-field">+7 999 214-08-26</div>
+            </div>
+          </div>
+          <div class="form-label">ЭЛЕКТРОННАЯ ПОЧТА</div>
+          <div class="profile-field">alexey@example.com</div>
+        </div>
+      </div>
+
+      <!-- Orders section -->
+      <div id="prof-section-orders" class="profile-section" style="display:none">
+        <h2 class="checkout-section-title">История заказов</h2>
+        <div class="order-item">
+          <div>
+            <div style="font-weight:700">№ AS-10482 • 08.09.2026</div>
+            <div style="font-size:13px;color:var(--gray);margin-top:4px">В пути</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-weight:900">30 480 ₽</div>
+            <a class="size-table-link" style="margin-top:4px;display:block">Подробнее →</a>
+          </div>
+        </div>
+        <div class="order-item">
+          <div>
+            <div style="font-weight:700">№ AS-09841 • 21.07.2026</div>
+            <div style="font-size:13px;color:var(--gray);margin-top:4px">Доставлен</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-weight:900">18 990 ₽</div>
+            <a class="size-table-link" style="margin-top:4px;display:block">Подробнее →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Wishlist section -->
+      <div id="prof-section-wishlist" class="profile-section" style="display:none">
+        <h2 class="checkout-section-title">Список желаний • <span id="wishlist-count-prof">0</span></h2>
+        <div class="products-grid" id="wishlist-grid-prof"></div>
+      </div>
+
+      <!-- Subs section -->
+      <div id="prof-section-subs" class="profile-section" style="display:none">
+        <div class="sub-promo">
+          <h2 class="checkout-section-title">Новости и акции Astro</h2>
+          <p style="font-size:14px;margin-bottom:20px">Получайте ранний доступ к дропам и персональные предложения.</p>
+          <div class="radio-item active" style="margin-bottom:20px">
+            <div class="radio-dot"></div> Подписка включена
+          </div>
+          <button class="btn-full-black" style="width:auto;padding:12px 32px" onclick="showToast('Настройки сохранены')">Сохранить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-logo">ASTRO✦</div>
+    <div class="footer-grid hide-mobile">
+      <div></div>
+      <div class="footer-col"><div class="footer-col-title">ПОКУПАТЕЛЯМ</div><a href="#">Доставка и оплата</a><a href="#">Возврат</a><a href="#">Размеры</a></div>
+      <div class="footer-col"><div class="footer-col-title">ASTRO</div><a href="#">О бренде</a><a href="#">Контакты</a><a href="#">Карьера</a></div>
+      <div class="footer-col"><div class="footer-col-title">СЛЕДИТЕ ЗА НАМИ</div><a href="#">VK</a><a href="#">Telegram</a></div>
+    </div>
+    <div class="footer-copyright">© 2026 ASTRO. Все права защищены.</div>
+  </footer>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== DATA =====
+const products = [
+  {
+    id: 1,
+    name: 'Куртка Orbit Shell',
+    sub: 'Новая коллекция · 4 цвета',
+    price: '18 990 ₽',
+    priceNum: 18990,
+    category: 'Мужчинам',
+    badge: 'НОВИНКА',
+    desc: 'Лёгкая технологичная куртка свободного кроя. Защищает от ветра и небольшого дождя, сохраняя комфорт в движении.',
+    images: [
+      'https://images.pexels.com/photos/5319379/pexels-photo-5319379.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
+      'https://images.pexels.com/photos/9218524/pexels-photo-9218524.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
+      'https://images.pexels.com/photos/39457673/pexels-photo-39457673.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
+      'https://images.pexels.com/photos/9645058/pexels-photo-9645058.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
+    ],
+    colors: ['#c0bfbe','#222','#f05c40'],
+    colorName: 'ЛУННЫЙ СЕРЕБРИСТЫЙ',
+    details: 'Состав · 88% полиамид, 12% эластан\nПосадка · свободная\nУход · деликатная стирка при 30°C\nАртикул · AS-OS-026'
+  },
+  {
+    id: 2,
+    name: 'Пальто Lunar',
+    sub: 'Новая коллекция · 4 цвета',
+    price: '24 990 ₽',
+    priceNum: 24990,
+    category: 'Женщинам',
+    badge: 'НОВИНКА',
+    desc: 'Классическое пальто из шерстяной смеси. Идеально для городской прогулки в прохладный день.',
+    images: [
+      'https://images.pexels.com/photos/19169496/pexels-photo-19169496.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
+      'https://images.pexels.com/photos/29271917/pexels-photo-29271917.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
+      'https://images.pexels.com/photos/19169251/pexels-photo-19169251.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
+      'https://images.pexels.com/photos/19128142/pexels-photo-19128142.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
+    ],
+    colors: ['#d4c4a8','#222','#888'],
+    colorName: 'БЕЖЕВЫЙ',
+    details: 'Состав · 70% шерсть, 30% полиэстер\nПосадка · прямая\nУход · химчистка\nАртикул · AS-LN-012'
+  },
+  {
+    id: 3,
+    name: 'Трикотаж Nova',
+    sub: 'Новая коллекция · 4 цвета',
+    price: '9 990 ₽',
+    priceNum: 9990,
+    category: 'Женщинам',
+    badge: 'НОВИНКА',
+    desc: 'Мягкий вязаный джемпер с высоким воротником. Натуральные материалы, приятные к телу.',
+    images: [
+      'https://images.pexels.com/photos/39457678/pexels-photo-39457678.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
+      'https://images.pexels.com/photos/12960395/pexels-photo-12960395.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
+      'https://images.pexels.com/photos/39457673/pexels-photo-39457673.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
+      'https://images.pexels.com/photos/9218524/pexels-photo-9218524.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
+    ],
+    colors: ['#f5f0e8','#222','#c8b89a'],
+    colorName: 'ЭКРЮ',
+    details: 'Состав · 100% хлопок\nПосадка · оверсайз\nУход · ручная стирка при 30°C\nАртикул · AS-NV-008'
+  },
+  {
+    id: 4,
+    name: 'Брюки Wide Gravity',
+    sub: 'Новая коллекция · 4 цвета',
+    price: '11 490 ₽',
+    priceNum: 11490,
+    category: 'Мужчинам',
+    badge: 'НОВИНКА',
+    desc: 'Широкие брюки с высокой посадкой. Свободный силуэт и удобные карманы.',
+    images: [
+      'https://images.pexels.com/photos/39457524/pexels-photo-39457524.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
+      'https://images.pexels.com/photos/39457678/pexels-photo-39457678.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
+      'https://images.pexels.com/photos/12960395/pexels-photo-12960395.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
+      'https://images.pexels.com/photos/8148577/pexels-photo-8148577.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
+    ],
+    colors: ['#222','#555','#e8e5e0'],
+    colorName: 'ЧЁРНЫЙ',
+    details: 'Состав · 78% хлопок, 22% полиэстер\nПосадка · широкая\nУход · машинная стирка при 40°C\nАртикул · AS-WG-019'
+  },
+  {
+    id: 5,
+    name: 'Платье Eclipse',
+    sub: 'Новая коллекция · 4 цвета',
+    price: '15 990 ₽',
+    priceNum: 15990,
+    category: 'Женщинам',
+    badge: 'НОВИНКА',
+    desc: 'Элегантное асимметричное платье-миди. Подходит как для офиса, так и для вечернего выхода.',
+    images: [
+      'https://images.pexels.com/photos/39398487/pexels-photo-39398487.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
+      'https://images.pexels.com/photos/38388457/pexels-photo-38388457.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
+      'https://images.pexels.com/photos/38959988/pexels-photo-38959988.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
+      'https://images.pexels.com/photos/39398487/pexels-photo-39398487.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
+    ],
+    colors: ['#222','#555','#f05c40'],
+    colorName: 'ЧЁРНЫЙ',
+    details: 'Состав · 95% вискоза, 5% эластан\nПосадка · приталенная\nУход · деликатная стирка\nАртикул · AS-EC-031'
+  },
+  {
+    id: 6,
+    name: 'Худи Signal',
+    sub: 'Новая коллекция · 4 цвета',
+    price: '8 490 ₽',
+    priceNum: 8490,
+    category: 'Детям',
+    badge: 'НОВИНКА',
+    desc: 'Яркое худи из плотного хлопка. Удобный крой и выразительный цвет.',
+    images: [
+      'https://images.pexels.com/photos/8148577/pexels-photo-8148577.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
+      'https://images.pexels.com/photos/39457673/pexels-photo-39457673.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
+      'https://images.pexels.com/photos/9218524/pexels-photo-9218524.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
+      'https://images.pexels.com/photos/12960395/pexels-photo-12960395.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
+    ],
+    colors: ['#f05c40','#222','#c8f000'],
+    colorName: 'КОРАЛЛ',
+    details: 'Состав · 100% хлопок\nПосадка · свободная\nУход · машинная стирка при 40°C\nАртикул · AS-SG-044'
+  }
+];
+
+// ===== STATE =====
+let cart = [];
+let wishlist = new Set();
+let currentProduct = null;
+let currentFilter = 'Все';
+let selectedSize = 'M';
+let selectedColorIdx = 0;
+let currentMainImg = 0;
+let isLoggedIn = false;
+let shippingCost = 490;
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+  renderPopular();
+  renderCatalog();
+  handleResize();
+  
+  // Seed initial cart for demo
+  cart = [
+    { ...products[0], qty: 1, size: 'M', color: 'Лунный серебристый' },
+    { ...products[3], qty: 2, size: 'M', color: 'Чёрный' }
+  ];
+  updateCartUI();
+});
+window.addEventListener('resize', handleResize);
+
+function handleResize() {
+  const sidebar = document.getElementById('catalog-sidebar');
+  if (sidebar) {
+    if (window.innerWidth >= 768) {
+      sidebar.classList.remove('mobile-open');
+      sidebar.style.display = 'flex';
+    } else {
+      if (!sidebar.classList.contains('mobile-open')) {
+        sidebar.style.display = 'none';
+      }
+    }
+  }
+}
+
+// ===== PAGE NAVIGATION =====
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const page = document.getElementById('page-' + name);
+  if (page) page.classList.add('active');
+  window.scrollTo(0, 0);
+  toggleMobileMenu(false);
+  
+  if (name === 'cart') renderCart();
+  if (name === 'profile') renderProfile();
+}
+
+function handleAuthClick() {
+  if (isLoggedIn) showPage('profile');
+  else showPage('login');
+}
+
+function filterCatalog(cat) {
+  currentFilter = cat;
+  showPage('catalog');
+  document.querySelectorAll('.filter-tab').forEach(t => {
+    t.classList.toggle('active', t.textContent === cat);
+  });
+  renderCatalog();
+}
+
+function toggleMobileMenu(force) {
+  const menu = document.getElementById('mobile-menu');
+  if (force === false) { menu.classList.remove('open'); return; }
+  menu.classList.toggle('open');
+}
+
+// ===== RENDER POPULAR =====
+function renderPopular() {
+  const grid = document.getElementById('popular-grid');
+  const items = products.slice(0, 4);
+  grid.innerHTML = items.map(p => productCard(p, true)).join('');
+}
+
+// ===== RENDER CATALOG =====
+function renderCatalog() {
+  const grid = document.getElementById('catalog-grid');
+  const filtered = currentFilter === 'Все' ? products : products.filter(p => p.category === currentFilter);
+  document.getElementById('catalog-count').textContent = filtered.length + ' товаров';
+  grid.innerHTML = filtered.map(p => productCard(p, false)).join('');
+}
+
+function setCatalogFilter(cat, btn) {
+  currentFilter = cat;
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderCatalog();
+}
+
+function toggleMobileSidebar() {
+  const sidebar = document.getElementById('catalog-sidebar');
+  sidebar.classList.toggle('mobile-open');
+  sidebar.style.display = sidebar.classList.contains('mobile-open') ? 'flex' : 'none';
+}
+
+// ===== PRODUCT CARD HTML =====
+function productCard(p, isPopular) {
+  const wished = wishlist.has(p.id);
+  return `
+    <div class="product-card" onclick="openProduct(${p.id})">
+      <div class="product-img">
+        <img src="${p.images[0]}" alt="${p.name}" loading="lazy">
+        <button class="product-wish ${wished ? 'active' : ''}" onclick="event.stopPropagation();toggleWishlist(${p.id},this)">
+          <span class="wish-heart ${wished ? 'loved' : ''}">♡</span>
+        </button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:4px">
+        <div>
+          <div class="product-name">${p.name}</div>
+          <div class="product-sub">${p.sub}</div>
+        </div>
+        <div class="product-price">${p.price}</div>
+      </div>
+    </div>
+  `;
+}
+
+// ===== WISHLIST =====
+function toggleWishlist(id, btn) {
+  if (wishlist.has(id)) {
+    wishlist.delete(id);
+    btn.classList.remove('active');
+    btn.querySelector('.wish-heart').classList.remove('loved');
+    btn.querySelector('.wish-heart').textContent = '♡';
+  } else {
+    wishlist.add(id);
+    btn.classList.add('active');
+    btn.querySelector('.wish-heart').classList.add('loved');
+    btn.querySelector('.wish-heart').textContent = '♥';
+    showToast('Добавлено в избранное');
+  }
+}
+
+function toggleWishDesktop() {
+  const btn = document.getElementById('pd-wish-d');
+  if (!currentProduct) return;
+  if (wishlist.has(currentProduct.id)) {
+    wishlist.delete(currentProduct.id);
+    btn.textContent = '♡';
+  } else {
+    wishlist.add(currentProduct.id);
+    btn.textContent = '♥';
+    showToast('Добавлено в избранное');
+  }
+}
+
+// ===== OPEN PRODUCT =====
+function openProduct(id) {
+  currentProduct = products.find(p => p.id === id);
+  if (!currentProduct) return;
+  selectedSize = 'M';
+  selectedColorIdx = 0;
+  currentMainImg = 0;
+
+  const p = currentProduct;
+
+  // Breadcrumb
+  document.getElementById('product-breadcrumb').innerHTML =
+    `<a onclick="showPage('catalog')">Каталог</a> / ${p.category} / ${p.name}`;
+
+  // Mobile gallery
+  document.getElementById('product-main-img').src = p.images[0];
+  document.getElementById('product-main-img').alt = p.name;
+
+  // Thumbs
+  document.getElementById('product-thumbs').innerHTML = p.images.map((img, i) =>
+    `<div class="product-thumb ${i===0?'active':''}" onclick="setMainImg(${i})">
+      <img src="${img}" alt="">
+    </div>`
+  ).join('');
+
+  // Mobile info
+  document.getElementById('pd-badge-m').textContent = p.badge;
+  document.getElementById('pd-title-m').textContent = p.name;
+  document.getElementById('pd-price-m').textContent = p.price;
+  document.getElementById('pd-desc-m').textContent = p.desc;
+  document.getElementById('pd-options-m').innerHTML = buildOptions(p);
+  document.getElementById('pd-details-m').innerHTML = buildDetails(p);
+
+  // Desktop gallery
+  document.getElementById('product-desktop-gallery').innerHTML = p.images.map(img =>
+    `<img src="${img}" alt="${p.name}" loading="lazy">`
+  ).join('');
+
+  // Desktop info
+  document.getElementById('pd-title-d').textContent = p.name;
+  document.getElementById('pd-price-d').textContent = p.price;
+  document.getElementById('pd-desc-d').textContent = p.desc;
+  document.getElementById('pd-options-d').innerHTML = buildOptions(p);
+  document.getElementById('pd-details-d').innerHTML = buildDetails(p);
+  document.getElementById('pd-wish-d').textContent = wishlist.has(p.id) ? '♥' : '♡';
+
+  showPage('product');
+}
+
+function buildOptions(p) {
+  const colors = p.colors.map((c, i) =>
+    `<div class="color-opt ${i===selectedColorIdx?'active':''}" style="background:${c}" onclick="selectColor(${i})"></div>`
+  ).join('');
+  const sizes = ['XS','S','M','L','XL'].map(s =>
+    `<button class="size-opt ${s===selectedSize?'active':''}" onclick="selectSize('${s}',this)">${s}</button>`
+  ).join('');
+  return `
+    <div class="product-option-label">ЦВЕТ: ${p.colorName}</div>
+    <div class="color-options">${colors}</div>
+    <div class="size-row">
+      <div class="product-option-label">ВЫБЕРИТЕ РАЗМЕР</div>
+      <a class="size-table-link" href="#">Таблица размеров</a>
+    </div>
+    <div class="size-options">${sizes}</div>
+  `;
+}
+
+function buildDetails(p) {
+  return p.details.split('\n').map(l => `<div>${l}</div>`).join('');
+}
+
+function setMainImg(idx) {
+  currentMainImg = idx;
+  document.getElementById('product-main-img').src = currentProduct.images[idx];
+  document.querySelectorAll('.product-thumb').forEach((t, i) => {
+    t.classList.toggle('active', i === idx);
+  });
+}
+
+function selectSize(size, btn) {
+  selectedSize = size;
+  // Update both mobile and desktop
+  document.querySelectorAll('.size-opt').forEach(b => {
+    b.classList.toggle('active', b.textContent === size);
+  });
+}
+
+function selectColor(idx) {
+  selectedColorIdx = idx;
+  document.querySelectorAll('.color-opt').forEach((c, i) => {
+    c.classList.toggle('active', i === idx);
+  });
+}
+
+// ===== CART LOGIC =====
+function addToCart() {
+  const existing = cart.find(item => item.id === currentProduct.id && item.size === selectedSize);
+  if (existing) {
+    existing.qty++;
+  } else {
+    cart.push({
+      ...currentProduct,
+      qty: 1,
+      size: selectedSize,
+      color: currentProduct.colorName
+    });
+  }
+  updateCartUI();
+  showToast(`${currentProduct.name} добавлен в корзину`);
+}
+
+function updateCartUI() {
+  const count = cart.reduce((acc, item) => acc + item.qty, 0);
+  document.getElementById('cart-count').textContent = count;
+  document.getElementById('cart-badge-mobile').textContent = count;
+  if (document.getElementById('cart-count-prof')) {
+    document.getElementById('cart-count-prof').textContent = count;
+  }
+}
+
+function renderCart() {
+  const list = document.getElementById('cart-items-list');
+  if (!list) return;
+  
+  if (cart.length === 0) {
+    list.innerHTML = '<div style="padding:40px 0;text-align:center;color:var(--gray)">Корзина пуста</div>';
+    updateSummary();
+    return;
+  }
+
+  list.innerHTML = cart.map((item, idx) => `
+    <div class="cart-item">
+      <div class="cart-item-img"><img src="${item.images[0]}" alt=""></div>
+      <div class="cart-item-info">
+        <div class="cart-item-name">${item.name}</div>
+        <div class="cart-item-meta">${item.color} • ${item.size}</div>
+        <div class="cart-item-remove" onclick="removeFromCart(${idx})">Удалить</div>
+      </div>
+      <div class="cart-item-right">
+        <div class="cart-qty">
+          <button onclick="changeQty(${idx}, -1)">–</button>
+          <span>${item.qty}</span>
+          <button onclick="changeQty(${idx}, 1)">+</button>
+        </div>
+        <div class="cart-item-price">${item.price}</div>
+      </div>
+    </div>
+  `).join('');
+  
+  updateSummary();
+}
+
+function changeQty(idx, delta) {
+  cart[idx].qty += delta;
+  if (cart[idx].qty < 1) cart[idx].qty = 1;
+  updateCartUI();
+  renderCart();
+}
+
+function removeFromCart(idx) {
+  cart.splice(idx, 1);
+  updateCartUI();
+  renderCart();
+}
+
+function updateSummary() {
+  const subtotal = cart.reduce((acc, item) => acc + (item.priceNum * item.qty), 0);
+  const total = subtotal + shippingCost;
+  
+  document.getElementById('summary-subtotal').textContent = subtotal.toLocaleString() + ' ₽';
+  document.getElementById('summary-shipping').textContent = (shippingCost === 0 ? 'бесплатно' : shippingCost + ' ₽');
+  document.getElementById('summary-total').textContent = total.toLocaleString() + ' ₽';
+}
+
+function selectRadio(el, type) {
+  const parent = el.parentElement;
+  parent.querySelectorAll('.radio-item').forEach(item => item.classList.remove('active'));
+  el.classList.add('active');
+  
+  if (type === 'delivery') {
+    const text = el.textContent.toLowerCase();
+    if (text.includes('бесплатно')) shippingCost = 0;
+    else if (text.includes('590')) shippingCost = 590;
+    else shippingCost = 490;
+    updateSummary();
+  }
+}
+
+function handleCheckout() {
+  if (cart.length === 0) {
+    showToast('Корзина пуста');
+    return;
+  }
+  showToast('Заказ оформлен! Спасибо за покупку.');
+  cart = [];
+  updateCartUI();
+  showPage('home');
+}
+
+// ===== PROFILE LOGIC =====
+function switchProfileTab(tabName, btn) {
+  // Update sidebar/tabs UI
+  document.querySelectorAll('.profile-side-link, .profile-tab').forEach(el => {
+    el.classList.toggle('active', el.getAttribute('data-tab') === tabName);
+  });
+  
+  // Update section visibility
+  document.querySelectorAll('.profile-section').forEach(sec => sec.style.display = 'none');
+  const target = document.getElementById('prof-section-' + tabName);
+  if (target) target.style.display = 'block';
+  
+  if (tabName === 'wishlist') renderWishlistProf();
+}
+
+function renderWishlistProf() {
+  const grid = document.getElementById('wishlist-grid-prof');
+  const count = document.getElementById('wishlist-count-prof');
+  const wishedProducts = products.filter(p => wishlist.has(p.id));
+  
+  count.textContent = wishedProducts.length;
+  if (wishedProducts.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1;padding:40px 0;text-align:center;color:var(--gray)">Список пуст</div>';
+  } else {
+    grid.innerHTML = wishedProducts.map(p => productCard(p, false)).join('');
+  }
+}
+
+function renderProfile() {
+  renderWishlistProf();
+}
+
+// ===== AUTH =====
+function handleLogin() {
+  isLoggedIn = true;
+  showToast('Добро пожаловать!');
+  document.getElementById('auth-link').textContent = 'Личный кабинет';
+  if (document.getElementById('auth-link-mobile')) {
+    document.getElementById('auth-link-mobile').textContent = 'Личный кабинет';
+  }
+  setTimeout(() => showPage('home'), 800);
+}
+
+function handleRegister() {
+  isLoggedIn = true;
+  showToast('Аккаунт создан!');
+  document.getElementById('auth-link').textContent = 'Личный кабинет';
+  if (document.getElementById('auth-link-mobile')) {
+    document.getElementById('auth-link-mobile').textContent = 'Личный кабинет';
+  }
+  setTimeout(() => showPage('home'), 800);
+}
+
+function handleLogout() {
+  isLoggedIn = false;
+  document.getElementById('auth-link').textContent = 'Вход';
+  if (document.getElementById('auth-link-mobile')) {
+    document.getElementById('auth-link-mobile').textContent = 'Вход';
+  }
+  showToast('Вы вышли из системы');
+  showPage('home');
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Sidebar filter options interactive
+document.querySelectorAll('.sidebar-option').forEach(opt => {
+  opt.addEventListener('click', function() {
+    const parent = this.closest('.sidebar-options');
+    parent.querySelectorAll('.sidebar-option').forEach(o => o.classList.remove('active'));
+    this.classList.add('active');
+    renderCatalog();
+  });
+});
+</script>
+</body>
+</html>
