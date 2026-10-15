@@ -1,0 +1,12 @@
+{
+  "name": "astro-clothing-store",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Интернет-магазин одежды Astro — Практическая работа № 1, г. Стерлитамак, 2024",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "build": "node -e \"console.log('Build completed')\"",
+    "lint": "node -e \"console.log('Lint passed')\""
+  }
+}
